@@ -1,7 +1,15 @@
 # Contest Submission for:
 # https://www.kaggle.com/c/diabetic-retinopathy-detection/data
 
-from hdr.CNN_model import *
+from hdr.EfficientNet import *
+from hdr.preprocess import *
+import os
+import pandas as pd
+from tqdm import tqdm
+import numpy as np
+
+# Are you training??
+TTTTTT = 0
 
 # version: width, depth, res, dropout rate
 efficient_net_config = {
@@ -24,7 +32,12 @@ if __name__ == "__main__":
     print(f"Running EfficientNet with params for Version: {version}")
     # generate version
     net = EfficientNet(width_mult, depth_mult, dropout_rate)
-    if (1):
-        x = torch.rand(1, 3, res, res)
-        y = net(x)
-        print(y.size())
+
+    #if input("\nNetwork successfully loaded. Proceed with program? (Y/N)\n\n>:") != "Y":
+    #    quit()
+    
+    DATA_DIR = os.getcwd() + "//DiabeticRetinopathy//resources"  
+    # This is the dataset that we have
+    # dataset of all images, and patient IDs
+    dataset = DiabeticRetinopathyDataset(DATA_DIR + "//data//sample")
+
