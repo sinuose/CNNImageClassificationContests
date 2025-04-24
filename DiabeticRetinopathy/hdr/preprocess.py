@@ -4,6 +4,7 @@ import torchvision
 from torch.utils.data import Dataset
 # images
 from PIL import Image
+from pathlib import Path
 import matplotlib.pyplot as plt
 # utils
 from tqdm import tqdm
@@ -12,53 +13,48 @@ import os
 
 # Dataset Class
 class DiabeticRetinopathyDataset(Dataset):
-    '''
-    This class just assumes the files have image content and an ID which is denoted in the title
-    Each image needs 2 things
-        - image content (2 images per patient)
-        - patient ID
-    '''
-    def __init__(self, data_path,  transform = None):
-        super(DiabeticRetinopathyDataset, self).__init__()
-        # each dataset needs a path to ALL the images
-        self.data_path = data_path # path to data
-        self.transform = transform # transform to normalize the data
+    """
+    Each record is ONE eye image.
 
-        # List all image files in the data_path
-        self.image_files = [f for f in os.listdir(data_path) if f.endswith('.jpeg')]
-        # Extract patient IDs from the image filenames
-        self.patient_ids = list(set([f.split('_')[0] for f in self.image_files]))
-        # Group images by patient ID
-        self.patient_images = {pid: [f for f in self.image_files if f.startswith(pid)] for pid in self.patient_ids}
-        
+    Args
+    ----
+    root_dir   : Path with *.jpeg files
+    transform  : torchvision transform to apply
+    labels_df  : DataFrame with at least two columns:
+                 - 'image' : filename *without* extension
+                 - 'level' : integer class label 0-4
+    """
+
+    def __init__(self, root_dir, transform=None, labels_df=None):
+        self.root_dir  = Path(root_dir)
+        self.transform = transform
+
+        # index labels by image stem → grade
+        if labels_df is None:
+            raise ValueError("labels_df must be provided")
+        self.label_map = (
+            labels_df.set_index("image")["level"].to_dict()
+        )
+
+        # keep only images that have a label
+        self.image_paths = [p for p in self.root_dir.glob("*.jpeg")
+                            if p.stem in self.label_map]
+
+        if len(self.image_paths) == 0:
+            raise RuntimeError("No labelled images found!")
+
     def __len__(self):
-        '''length of the dataset'''
-        return len(self.patient_ids)
-    
-    def __getitem__(self, index):
-        ''' get a single item in the dataset'''
-        patient_id = self.patient_ids[index]
-        image_files = self.patient_images[patient_id]
-        
-        # Load the two images for the patient
-        images = []
+        return len(self.image_paths)
 
-        for img_file in tqdm(image_files):
-            # data path to the image directly
-            img_path = os.path.join(self.data_path, img_file)
-            # open the image up
-            img = Image.open(img_path)
-            
-            if self.transform is not None:
-                img = self.transform(img)
-            
-            images.append(img)
-        
-        # Assuming the label is the same for both images of the same patient
-        # You may need to adjust this based on your actual data structure
-        label = torch.tensor(int(patient_id))  # Replace with actual label logic if needed
-        
-        return images, label, patient_id
+    def __getitem__(self, idx):
+        path  = self.image_paths[idx]
+        img   = Image.open(path).convert("RGB")
+
+        if self.transform:
+            img = self.transform(img)
+
+        label = torch.tensor(self.label_map[path.stem], dtype=torch.long)
+        return img, label
     
 #------------------------------------------------------------------------------------------
 def imshow(inp, title=None):

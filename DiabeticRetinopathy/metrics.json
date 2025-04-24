@@ -1,0 +1,19 @@
+{
+  "accuracy": 0.7343847861982578,
+  "quadratic_kappa": -0.0003682807131240029,
+  "R0_precision": 0.7347252684649785,
+  "R0_recall": 0.9993800852382797,
+  "R0_f1-score": 0.8468571991398132,
+  "R1_precision": 0.0,
+  "R1_recall": 0.0,
+  "R1_f1-score": 0.0,
+  "R2_precision": 0.13333333333333333,
+  "R2_recall": 0.0003779289493575208,
+  "R2_f1-score": 0.0007537214999057848,
+  "R3_precision": 0.0,
+  "R3_recall": 0.0,
+  "R3_f1-score": 0.0,
+  "R4_precision": 0.0,
+  "R4_recall": 0.0,
+  "R4_f1-score": 0.0
+}
